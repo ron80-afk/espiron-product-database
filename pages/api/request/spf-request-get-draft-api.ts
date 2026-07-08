@@ -2,7 +2,6 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { supabase } from "@/utils/supabase";
 
 const ROW_SEP = "|ROW|";
-const ROW_BOUNDARY = "|ROW||ROW|";
 
 type LightMultipleRow = {
   itemName?: string;
@@ -144,19 +143,17 @@ export default async function handler(
       return res.status(404).json({ message: "No draft found", hasDraft: false });
     }
 
-    /* ── Detect format ── */
-    const detectFormat = (value: string | null): "old" | "new" => {
-      if (!value) return "new";
-      return value.includes(ROW_BOUNDARY) ? "old" : "new";
-    };
-
-    const format = detectFormat(draft.product_offer_image);
-
-    /* ── Split a flat string into per-row strings ── */
+    /* ── Split a flat string into per-option strings ──
+     * save-draft-api always joins with a single ROW_SEP ("|ROW|"),
+     * both for options-within-a-row and rows-between-each-other.
+     * There is no separate "old" format — a row with 0 offers just
+     * produces an accidental "|ROW||ROW|" substring, which the old
+     * detectFormat() heuristic misread as "old format" and used the
+     * wrong delimiter, leaving the whole field un-split. Always
+     * split on ROW_SEP. */
     const splitRows = (value: string | null): string[] => {
       if (!value) return [];
-      const sep = format === "old" ? ROW_BOUNDARY : ROW_SEP;
-      return value.split(sep);
+      return value.split(ROW_SEP);
     };
 
     /* ──────────────────────────────────────────────────────────
