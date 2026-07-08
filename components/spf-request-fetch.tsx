@@ -70,6 +70,7 @@ type SPFViewProps = {
   triggerDataAttr?: string;
   triggerMode?: "view" | "edit";
   showPoolingButton?: boolean;
+  onRefresh?: () => void | Promise<void>;
 };
 
 type SPFData = {
@@ -619,6 +620,7 @@ export default function SPFRequestFetch({
   triggerDataAttr,
   triggerMode = "view",
   showPoolingButton,
+  onRefresh,
 }: SPFViewProps) {
   const { userId } = useUser();
   const { onSPFUpdated } = useNotificationTriggers();
@@ -1763,6 +1765,7 @@ useEffect(() => {
         setEditMode(false);
         setViewMode(false);
         fetchSPF();
+        onRefresh?.();
       }
     } catch (err: any) {
       console.error("Submit edit error:", err);
